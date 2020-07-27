@@ -8,7 +8,7 @@ import result;
 class Sum: Thread {
     int* start;
     int* end;
-    ResultProtected* result;
+    shared ResultProtected* result;
 
     this(int* start, int* end, ResultProtected* result) @safe nothrow
     {
