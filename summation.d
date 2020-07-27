@@ -2,26 +2,24 @@ module sum;
 import core.sync.mutex;
 import std.stdio: write, writeln, writef, writefln;
 import core.thread : Thread;
-import result;
+import account;
 
 
 class Sum: Thread {
-    int* start;
-    int* end;
-    shared ResultProtected* result;
+    int start;
+    int end;
+    shared Account* account;
 
-    this(int* start, int* end, ResultProtected* result) @safe nothrow
+    this(int start, int end, shared Account* account) @safe nothrow
     {
         super(&run);
         start = start;
         end = end;
-        result = result;
+        account = account;
     }
     void run () {
-        int temporal_sum = 0;
-        for (int *p = start; p < end; ++p) {
-            temporal_sum += *p;
+        for (int p = start; p < end; ++p) {
+            account.deposit(p);
         }
-        result.inc(temporal_sum);
     }
 }
