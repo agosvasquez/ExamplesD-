@@ -2,6 +2,7 @@ module result;
 import core.sync.mutex;
 import std.stdio: write, writeln, writef, writefln;
 import core.thread : Thread;
+import lock;
 
 class ResultProtected
 {
@@ -14,18 +15,16 @@ class ResultProtected
         result = 0;
     }
 
-    void inc(int s) shared @safe nothrow @nogc
+    void inc(int s) shared @safe nothrow
     {
-        mtx.lock_nothrow();
+        auto lock = new shared Lock(mtx);
         (cast() result) += s;
-        mtx.unlock_nothrow();
     }
-    int get_val() shared @safe nothrow @nogc
+
+    int get_val() shared @safe nothrow
     {
-        mtx.lock_nothrow();
+        auto lock = new shared Lock(mtx);
         int val = result;
-        //implementar lock propio para sacar este unlock y que vaya en destructor
-        mtx.unlock_nothrow();
         return val;
     }
 }
