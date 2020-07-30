@@ -1,12 +1,13 @@
 module cuenta;
-import std.io : StringException;
-import tipo_moneda;
+import std;
+
+enum PESO = "PESO", DOLAR = "DOLAR";
 
 // TODO: agregar interfaz del costo de mantenimiento
 class Cuenta {
 protected:
 	int numero;
-	tipoMoneda moneda;
+	string moneda;
 	int limiteExtraccion;
 	float montoActual;
 
