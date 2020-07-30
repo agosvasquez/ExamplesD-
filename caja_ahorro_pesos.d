@@ -4,9 +4,7 @@ import cuenta;
 class CajaAhorroPesos : Cuenta {
 public:
 	this(int nro_cuenta, float limite_extraccion) {
-		numero = nro_cuenta;
+		super(nro_cuenta, limite_extraccion);
 		moneda = PESO;
-		limiteExtraccion = limite_extraccion;
-		montoActual = 0;
 	}
 }

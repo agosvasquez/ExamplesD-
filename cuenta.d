@@ -8,10 +8,16 @@ class Cuenta {
 protected:
 	int numero;
 	string moneda;
-	float limiteExtraccion;
 	float montoActual;
+	float limiteExtraccion;
 
 public:
+	this(int nro_cuenta, float limite_extraccion) {
+		numero = nro_cuenta;
+		limiteExtraccion = limite_extraccion;
+		montoActual = 0;
+	}
+
 	void agregarMonto(float monto) {
 		montoActual += monto;
 	}
