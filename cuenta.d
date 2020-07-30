@@ -1,13 +1,11 @@
 module cuenta;
 import std;
+import tipo_moneda;
 
-enum PESO = "PESO", DOLAR = "DOLAR";
-
-// TODO: agregar interfaz del costo de mantenimiento
 class Cuenta {
 protected:
 	int numero;
-	string moneda;
+	tipoMoneda tipo_moneda;
 	float montoActual;
 	float limiteExtraccion;
 
@@ -24,15 +22,23 @@ public:
 
 	void retirarMonto(float monto) {
 		if (montoActual < monto)
-			throw new StringException("No tienes suficiente dinero para extraer\n");
+			throw new StringException("No tienes suficiente dinero para extraer");
 	
 		if (monto > limiteExtraccion)
-			throw new StringException("El monto indicado supera el límite de extracción\n");
+			throw new StringException("El monto indicado supera el límite de extracción");
 
 		montoActual -= monto;
 	}
 
+	int obtenerNumeroCuenta() {
+		return numero;
+	}
+
 	float obtenerMontoActual() {
 		return montoActual;
+	}
+
+	string obtenerSimboloMoneda() {
+		return tipo_moneda.simbolo;
 	}
 }
