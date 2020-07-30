@@ -8,7 +8,7 @@ class Cuenta {
 protected:
 	int numero;
 	string moneda;
-	int limiteExtraccion;
+	float limiteExtraccion;
 	float montoActual;
 
 public:
@@ -24,5 +24,9 @@ public:
 			throw new StringException("El monto indicado supera el límite de extracción\n");
 
 		montoActual -= monto;
+	}
+
+	float obtenerMontoActual() {
+		return montoActual;
 	}
 }

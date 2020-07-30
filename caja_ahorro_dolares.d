@@ -3,12 +3,11 @@ import cuenta;
 
 class CajaAhorroDolares : Cuenta {
 public:
-	this() {
-		// TODO: tener un contador tipo id_manager
-		numero = 1;
+	this(int nro_cuenta, float limite_extraccion) {
+		numero = nro_cuenta;
 		moneda = DOLAR;
 		// TODO: tomar esto de algun lado
-		limiteExtraccion = 10_000;
+		limiteExtraccion = limite_extraccion;
 		montoActual = 0;
 	}
 }
