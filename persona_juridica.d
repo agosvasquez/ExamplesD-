@@ -8,7 +8,7 @@ class PersonaJuridica : Cliente, Imponible {
 
     }
 
-    float calcularCostoMensual() {
+    float calcularCostoMensual() shared {
         return 1000;
     }
 

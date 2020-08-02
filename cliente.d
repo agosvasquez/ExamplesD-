@@ -2,7 +2,7 @@ module cliente;
 import cuenta;
 
 class Cliente {
-    Cuenta cuenta;
+    shared Cuenta cuenta;
     this () {}
 
 

@@ -1,10 +1,15 @@
 import std;
 import caja_ahorro_pesos;
 import caja_ahorro_dolares;
+import cuenta;
+import summation;
+import core.thread : Thread;
+
 
 void main() {
 	ejemplo1();
 	ejemplo2();
+	ejemplo3();
 }
 
 void ejemplo1() {
@@ -13,7 +18,7 @@ void ejemplo1() {
 	int nro_cuenta = 1;
 	float limite_extraccion = 10_000;
 
-	auto cuenta = new CajaAhorroPesos(nro_cuenta++, limite_extraccion);
+	shared auto cuenta = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
 	writefln("Cuenta N°%s creada correctamente!", cuenta.obtenerNumeroCuenta());
 	writefln("El monto inicial de la cuenta es %s%s", cuenta.obtenerSimboloMoneda(),
 		cuenta.obtenerMontoActual());
@@ -49,8 +54,32 @@ void ejemplo2() {
 	int nro_cuenta = 1;
 	float limite_extraccion = 15_000;
 
-	auto cuenta = new CajaAhorroDolares(nro_cuenta++, limite_extraccion);
+	shared auto cuenta = new shared CajaAhorroDolares(nro_cuenta++, limite_extraccion);
 	writefln("Cuenta N°%s creada correctamente!", cuenta.obtenerNumeroCuenta());
 	writefln("El costo mensual de la cuenta es de %s%s",
 		cuenta.obtenerSimboloMoneda(), cuenta.calcularCostoMensual());
+}
+
+
+void ejemplo3() {
+	writeln("\nEjemplo 3:\n");
+	shared Cuenta cuenta = new shared Cuenta(1, 500000);
+	Thread[20] threads;
+
+	for (int i = 0; i < 20; i++) {
+
+		auto thread = new Sum(
+		1,
+		10,
+		&cuenta).start();
+		threads[i] = thread;
+	}
+
+	for (int i = 0; i < 20; i++) {
+		threads[i].join();
+	}
+
+	//tiene que devolver 45*20
+	float balance = cuenta.obtenerMontoActual();
+	writeln(balance);
 }
