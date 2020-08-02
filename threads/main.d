@@ -1,32 +1,32 @@
 module main;
-import core.sync.mutex;
-import std.stdio: write, writeln, writef, writefln;
-import core.thread : Thread;
-import sum;
+//import core.sync.mutex;
+//import std.stdio: write, writeln, writef, writefln;
+//import core.thread : Thread;
+import summation;
 import account;
 
 void main()
 {
-    shared Account* account;
-    Sum[20] threads;
+    import core.thread : Thread;
+    import std.stdio: write, writeln, writef, writefln;
+
+    shared Account account = new shared Account();
+    Thread[20] threads;
 
     for (int i = 0; i < 20; i++) {
 
-        threads[i] = new Sum(
+        auto thread = new Sum(
         1,
-        10, account
-        );
-    }
-
-    for (int i = 0; i < 20; i++) {
-        threads[i].start();
+        10,
+        &account).start();
+        threads[i] = thread;
     }
 
     for (int i = 0; i < 20; i++) {
         threads[i].join();
     }
 
-    int balance = account.getBalance();gi
+    int balance = account.getBalance();
     writeln(balance);
 
 

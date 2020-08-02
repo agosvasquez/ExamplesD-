@@ -2,11 +2,10 @@ module account;
 import core.sync.mutex;
 import std.stdio: write, writeln, writef, writefln;
 import core.thread : Thread;
-import lock;
 
-class Account
+class Account   
 {
-    Mutex mtx;
+    shared Mutex mtx;
     int balance;
 
     this() shared @safe nothrow
@@ -17,19 +16,23 @@ class Account
 
     void deposit(int amount) shared @safe nothrow
     {
-        auto lock = new shared Lock(mtx);
+        mtx.lock_nothrow();
         (cast() balance) += amount;
+        mtx.unlock_nothrow();
     }
 
     void withdraw(int amount) shared @safe nothrow
     {
-        auto lock = new shared Lock(mtx);
+        mtx.lock_nothrow();
         (cast() balance) -= amount;
+        mtx.unlock_nothrow();
     }
 
     int getBalance() shared @safe nothrow
     {
-        auto lock = new shared Lock(mtx);
-        return balance;
+        mtx.lock_nothrow();
+        int b = balance;
+        mtx.unlock_nothrow();
+        return b;
     }
 }
