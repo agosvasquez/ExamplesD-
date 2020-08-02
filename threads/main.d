@@ -1,7 +1,4 @@
 module main;
-//import core.sync.mutex;
-//import std.stdio: write, writeln, writef, writefln;
-//import core.thread : Thread;
 import summation;
 import account;
 
