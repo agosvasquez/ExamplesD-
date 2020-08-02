@@ -5,7 +5,7 @@ import persona_fisica;
 import persona_juridica;
 
 class SistemaBancario {
-    Cliente*[string] clientes;
+    Cliente[string] clientes;
 
     this() {}
 
@@ -20,11 +20,11 @@ class SistemaBancario {
 
     void agregarPersonaFisica(string id, shared Cuenta* cuenta) {
         Cliente cliente = new PersonaFisica(cuenta);
-        clientes[id] = &cliente;
+        clientes[id] = cliente;
     }
 
     void agregarPersonaJuridica(string id, shared Cuenta* cuenta) {
         Cliente cliente = new PersonaJuridica(cuenta);
-        clientes[id] = &cliente;
+        clientes[id] = cliente;
     }
 }

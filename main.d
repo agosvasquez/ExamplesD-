@@ -13,7 +13,7 @@ void main() {
 	ejemplo2();
 	ejemplo3();
 	ejemplo4();
-	//ejemplo5();
+	ejemplo5();
 }
 
 void ejemplo1() {
@@ -139,6 +139,6 @@ void ejemplo5() {
 	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
 
 	banco.transferir("Persona 1", "Persona 2", 200);
-/*	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
-	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());*/
+	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
+	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());
 }
