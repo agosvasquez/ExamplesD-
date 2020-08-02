@@ -5,16 +5,15 @@ import cuenta;
 import persona_fisica;
 import persona_juridica;
 import sistema_bancario;
-import summation;
+import depositante;
 import core.thread : Thread;
-
 
 void main() {
 	ejemplo1();
 	ejemplo2();
 	ejemplo3();
 	ejemplo4();
-	ejemplo5();
+	//ejemplo5();
 }
 
 void ejemplo1() {
@@ -69,23 +68,19 @@ void ejemplo2() {
 void ejemplo3() {
 	writeln("\nEjemplo 3:\n");
 	shared Cuenta cuenta = new shared Cuenta(1, 500000);
-	Thread[20] threads;
+	Thread[20] depositantes;
 
 	for (int i = 0; i < 20; i++) {
-
-		auto thread = new Sum(
-		1,
-		10,
-		&cuenta).start();
-		threads[i] = thread;
+		auto depositante = new Depositante(1, 10, &cuenta).start();
+		depositantes[i] = depositante;
 	}
 
 	for (int i = 0; i < 20; i++) {
-		threads[i].join();
+		depositantes[i].join();
 	}
 
 	//tiene que devolver 45*20
-	writefln("El monto esperado despues que todos los threads agreguen su monto es de 900");
+	writefln("El monto esperado despues que todos los depositantes agreguen su monto es de 900");
 	writefln("El monto actual  de la cuenta es de %s",cuenta.montoActual());
 }
 
