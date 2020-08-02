@@ -8,7 +8,7 @@ protected:
 	shared Mutex mtx;
 	int numero;
 	tipoMoneda tipo_moneda;
-	float montoActual;
+	float mActual;
 	float limiteExtraccion;
 
 public:
@@ -16,18 +16,18 @@ public:
 		mtx = new shared Mutex();
 		numero = nro_cuenta;
 		limiteExtraccion = limite_extraccion;
-		montoActual = 0;
+		mActual = 0;
 	}
 
 	void agregarMonto(float monto) shared {
 		mtx.lock_nothrow();
-		(cast() montoActual) += monto;
+		(cast() mActual) += monto;
 		mtx.unlock_nothrow();
 	}
 
 	void retirarMonto(float monto) shared {
 		mtx.lock_nothrow();
-		if (montoActual < monto) {
+		if (mActual < monto) {
 			mtx.unlock_nothrow();
 			throw new StringException( "No tienes suficiente dinero para extraer");
 		}
@@ -37,7 +37,7 @@ public:
 			throw new StringException( "El monto indicado supera el límite de extracción");
 		}
 
-		(cast() montoActual) -= monto;
+		(cast() mActual) -= monto;
 		mtx.unlock_nothrow();
 	}
 
@@ -45,9 +45,9 @@ public:
 		return numero;
 	}
 
-	float obtenerMontoActual() shared {
+	float montoActual() shared {
 		mtx.lock_nothrow();
-		float monto = montoActual;
+		float monto = mActual;
 		mtx.unlock_nothrow();
 		return monto;
 	}

@@ -1,7 +1,6 @@
 module summation;
 import core.sync.mutex;
 import std.stdio: write, writeln, writef, writefln;
-//import core.thread.osthread;
 import core.thread : Thread;
 import cuenta;
 
