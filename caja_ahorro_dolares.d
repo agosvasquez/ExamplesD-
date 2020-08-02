@@ -9,8 +9,8 @@ private:
 public:
 	this(int nro_cuenta, float limite_extraccion) shared @safe nothrow {
 		super(nro_cuenta, limite_extraccion);
-		tipo_moneda.moneda = "DOLAR";
-		tipo_moneda.simbolo = "USD";
+		tipoMoneda.nombre = "DOLAR";
+		tipoMoneda.simbolo = "USD";
 		constanteMensual = 0.1;
 	}
 

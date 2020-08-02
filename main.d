@@ -35,6 +35,7 @@ void ejemplo1() {
 	writefln("El monto actual de la cuenta es %s%s", cuenta.obtenerSimboloMoneda(),
 		cuenta.montoActual());
 
+	// Intento retirar una cantidad mayor a la que tengo
 	try {
 		cuenta.retirarMonto(4000);
 	} catch (StringException e) {
@@ -45,6 +46,7 @@ void ejemplo1() {
 	writefln("El monto actual de la cuenta es %s%s", cuenta.obtenerSimboloMoneda(),
 		cuenta.montoActual());
 
+	// Intento retirar una cantidad mayor al limite de extraccion
 	try {
 		cuenta.retirarMonto(12_000);
 	} catch (StringException e) {
@@ -64,7 +66,6 @@ void ejemplo2() {
 		cuenta.obtenerSimboloMoneda(), cuenta.calcularCostoMensual());
 }
 
-
 void ejemplo3() {
 	writeln("\nEjemplo 3:\n");
 	shared Cuenta cuenta = new shared Cuenta(1, 500000);
@@ -79,15 +80,15 @@ void ejemplo3() {
 		depositantes[i].join();
 	}
 
-	//tiene que devolver 45*20
+	// Tiene que devolver 45 * 20 = 900
 	writefln("El monto esperado despues que todos los depositantes agreguen su monto es de 900");
-	writefln("El monto actual  de la cuenta es de %s",cuenta.montoActual());
+	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
 }
 
-
 void ejemplo4() {
-	writeln("\nEjemplo 4:\n");
 	import std.stdio, std.algorithm, std.range;
+
+	writeln("\nEjemplo 4:\n");
 
 	shared Cuenta[7] cuentas;
 
@@ -98,47 +99,50 @@ void ejemplo4() {
 	}
 
 	foreach (i; iota(6).parallel) {
-        //El cuerpo del foreach es ejecutado en paralelo para cada i 
+        // El cuerpo del foreach es ejecutado en paralelo para cada i 
         writefln("El monto actual de la cuenta %s es de %s", i, cuentas[i].montoActual());
     }
 	
-	float[] suc1 = [cuentas[0].montoActual(),cuentas[1].montoActual(), cuentas[4].montoActual()];
-	float[] suc2 = [cuentas[2].montoActual(), cuentas[3].montoActual(), cuentas[5].montoActual()];
-	float[] suc3 = [cuentas[6].montoActual()];
-    // tiene que ser inmutable para permitir 
-	//el acceso desde dentro de una funcion pura
+	float[] suc1 = [cuentas[0].montoActual(),cuentas[1].montoActual(), cuentas[4].montoActual()],
+			suc2 = [cuentas[2].montoActual(), cuentas[3].montoActual(), cuentas[5].montoActual()],
+			suc3 = [cuentas[6].montoActual()];
+    
+    // Tiene que ser inmutable para permitir el acceso desde dentro de una funcion pura
     immutable pivot = 0;
 
-    float mySum(float a, float b) pure nothrow // pure 
-    {
-        if (b > pivot)
-            return a + b;
-        else
-            return a;
+    // Funcion pura
+    float mySum(float a, float b) pure nothrow {
+    	return (b > pivot) ? (a + b) : a;
     }
 
-    //  (closure)
+    // Closure
     auto r = suc1.chain(suc2).chain(suc3).reduce!mySum();
-    writeln("Result: ", r); 
+    writeln("Resultado: ", r); 
 
-    // passing a delegate literal
-    r = reduce!((a, b) => (b > pivot) ? a + b :a)(chain(suc1, suc2, suc3));
-    writeln("Result: ", r); 
+    // Pasar un literal delegado
+    r = reduce!((a, b) => (b > pivot) ? (a + b) : a)(chain(suc1, suc2, suc3));
+    writeln("Resultado: ", r); 
 }
-
 
 void ejemplo5() {
 	writeln( "\nEjemplo 5:\n");
+
 	float limite_extraccion = 10_000;
+	int nro_cuenta = 1;
+
 	SistemaBancario banco = new SistemaBancario();
-	shared Cuenta cuenta_1 = new shared CajaAhorroPesos(1, limite_extraccion);
+	
+	shared Cuenta cuenta_1 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
 	banco.agregarPersonaFisica("Persona 1", &cuenta_1);
-	shared Cuenta cuenta_2 = new shared CajaAhorroPesos(2, limite_extraccion);
+
+	shared Cuenta cuenta_2 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
+	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
+	
 	cuenta_1.agregarMonto(1000);
 	cuenta_2.agregarMonto(1000);
-	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
 
 	banco.transferir("Persona 1", "Persona 2", 200);
+	
 	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
 	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());
 }

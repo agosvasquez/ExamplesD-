@@ -2,12 +2,13 @@ module cliente;
 import cuenta;
 
 class Cliente {
+private:
     shared Cuenta* cuenta;
-    this (shared Cuenta* cuenta_recibida) {
-        cuenta = cuenta_recibida;
+
+public:
+    this (shared Cuenta* cuenta) {
+        this.cuenta = cuenta;
     }
-
-
 
     void agregarMonto(int monto) {
         cuenta.agregarMonto(monto);

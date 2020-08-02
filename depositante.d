@@ -17,8 +17,7 @@ private:
     }
     
 public:
-    this(int inicio, int fin, shared Cuenta* cuenta) @safe nothrow
-    {
+    this(int inicio, int fin, shared Cuenta* cuenta) @safe nothrow {
         this.inicio = inicio;
         this.fin = fin;
         this.cuenta = cuenta;

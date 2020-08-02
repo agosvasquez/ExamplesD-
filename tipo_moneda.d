@@ -1,6 +1,6 @@
-module tipo_moneda;
+module moneda;
 
-struct tipoMoneda {
-	string moneda;
+struct moneda {
+	string nombre;
 	string simbolo;
 }

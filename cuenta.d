@@ -1,13 +1,13 @@
 module cuenta;
 import core.sync.mutex;
 import std;
-import tipo_moneda;
+import moneda;
 
 class Cuenta {
 protected:
 	shared Mutex mtx;
 	int numero;
-	tipoMoneda tipo_moneda;
+	moneda tipoMoneda;
 	float mActual;
 	float limiteExtraccion;
 
@@ -21,7 +21,7 @@ public:
 
 	void agregarMonto(float monto) shared {
 		mtx.lock_nothrow();
-		(cast() mActual) += monto;
+		cast()mActual += monto;
 		mtx.unlock_nothrow();
 	}
 
@@ -37,7 +37,7 @@ public:
 			throw new StringException( "El monto indicado supera el límite de extracción");
 		}
 
-		(cast() mActual) -= monto;
+		cast()mActual -= monto;
 		mtx.unlock_nothrow();
 	}
 
@@ -53,6 +53,6 @@ public:
 	}
 
 	string obtenerSimboloMoneda() shared {
-		return tipo_moneda.simbolo;
+		return tipoMoneda.simbolo;
 	}
 }
