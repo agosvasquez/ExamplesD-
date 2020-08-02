@@ -2,6 +2,9 @@ import std;
 import caja_ahorro_pesos;
 import caja_ahorro_dolares;
 import cuenta;
+import persona_fisica;
+import persona_juridica;
+import sistema_bancario;
 import summation;
 import core.thread : Thread;
 
@@ -11,6 +14,7 @@ void main() {
 	ejemplo2();
 	ejemplo3();
 	ejemplo4();
+	ejemplo5();
 }
 
 void ejemplo1() {
@@ -125,4 +129,21 @@ void ejemplo4() {
     // passing a delegate literal
     r = reduce!((a, b) => (b > pivot) ? a + b :a)(chain(suc1, suc2, suc3));
     writeln("Result: ", r); 
+}
+
+
+void ejemplo5() {
+	writeln( "\nEjemplo 5:\n");
+	float limite_extraccion = 10_000;
+	SistemaBancario banco = new SistemaBancario();
+	shared Cuenta cuenta_1 = new shared CajaAhorroPesos(1, limite_extraccion);
+	banco.agregarPersonaFisica("Persona 1", &cuenta_1);
+	shared Cuenta cuenta_2 = new shared CajaAhorroPesos(2, limite_extraccion);
+	cuenta_1.agregarMonto(1000);
+	cuenta_2.agregarMonto(1000);
+	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
+
+	banco.transferir("Persona 1", "Persona 2", 200);
+/*	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
+	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());*/
 }
