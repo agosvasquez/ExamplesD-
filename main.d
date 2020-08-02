@@ -98,6 +98,10 @@ void ejemplo4() {
 		cuentas[i] = cuenta;
 	}
 
+	foreach (i; iota(6).parallel) {
+        //El cuerpo del foreach es ejecutado en paralelo para cada i 
+        writefln("El monto actual de la cuenta %s es de %s", i, cuentas[i].montoActual());
+    }
 	
 	float[] suc1 = [cuentas[0].montoActual(),cuentas[1].montoActual(), cuentas[4].montoActual()];
 	float[] suc2 = [cuentas[2].montoActual(), cuentas[3].montoActual(), cuentas[5].montoActual()];
@@ -114,11 +118,11 @@ void ejemplo4() {
             return a;
     }
 
-    // passing a deleg (closure)
+    //  (closure)
     auto r = suc1.chain(suc2).chain(suc3).reduce!mySum();
-    writeln("Result: ", r); // Result: 15
+    writeln("Result: ", r); 
 
     // passing a delegate literal
     r = reduce!((a, b) => (b > pivot) ? a + b :a)(chain(suc1, suc2, suc3));
-    writeln("Result: ", r); // Result: 15
+    writeln("Result: ", r); 
 }
