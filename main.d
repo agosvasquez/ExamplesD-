@@ -68,26 +68,26 @@ void ejemplo2() {
 }
 
 void ejemplo3() {
-	writeln("\nEjemplo 3:\n");
-	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
-	Thread[20] depositantes;
+	writeln( "\nEjemplo 3:\n");
 
-	auto before = MonoTime.currTime;
-	for (int i = 0; i < 20; i++) {
-		auto depositante = new Depositante(1, 10, &cuenta).start();
-		depositantes[i] = depositante;
-	}
+	float limite_extraccion = 10_000;
+	int nro_cuenta = 1;
 
-	for (int i = 0; i < 20; i++) {
-		depositantes[i].join();
-	}
+	SistemaBancario banco = new SistemaBancario();
 
-	// Tiene que devolver 45 * 20 = 900
-	writefln("El monto esperado despues que todos los depositantes agreguen su monto es de 900");
-	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
-	auto after = MonoTime.currTime;
-	auto timeElapsed = after - before;
-	writefln("El tiempo que tardo es %s", timeElapsed);
+	shared Cuenta cuenta_1 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
+	banco.agregarPersonaFisica("Persona 1", &cuenta_1);
+
+	shared Cuenta cuenta_2 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
+	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
+
+	cuenta_1.agregarMonto(1000);
+	cuenta_2.agregarMonto(1000);
+
+	banco.transferir("Persona 1", "Persona 2", 200);
+
+	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
+	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());
 }
 
 void ejemplo4() {
@@ -130,43 +130,48 @@ void ejemplo4() {
 }
 
 void ejemplo5() {
-	writeln( "\nEjemplo 5:\n");
+	writeln("\nEjemplo 5:\n");
 
-	float limite_extraccion = 10_000;
-	int nro_cuenta = 1;
+	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
+	Thread[20] depositantes;
 
-	SistemaBancario banco = new SistemaBancario();
+	auto before = MonoTime.currTime;
 
-	shared Cuenta cuenta_1 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
-	banco.agregarPersonaFisica("Persona 1", &cuenta_1);
+	for (int i = 0; i < 20; i++) {
+		auto depositante = new Depositante(1, 10, &cuenta).start();
+		depositantes[i] = depositante;
+	}
 
-	shared Cuenta cuenta_2 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
-	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
+	for (int i = 0; i < 20; i++) {
+		depositantes[i].join();
+	}
 
-	cuenta_1.agregarMonto(1000);
-	cuenta_2.agregarMonto(1000);
+	// Tiene que devolver 45 * 20 = 900
+	writefln("El monto esperado despues que todos los depositantes agreguen su monto es de 900");
+	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
 
-	banco.transferir("Persona 1", "Persona 2", 200);
+	auto after = MonoTime.currTime;
+	auto timeElapsed = after - before;
 
-	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
-	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());
+	writefln("Tiempo de ejecución: %s", timeElapsed);
 }
-
 
 void ejemplo6() {
 	import core.thread : Fiber;
+
 	writeln("\nEjemplo 6:\n");
+
 	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
 	Fiber[20] depositantes;
 
-	void depositar(){
+	void depositar() {
 		for (int p = 1; p <10; p++) {
         	cuenta.agregarMonto(p);
 			Fiber.yield();
     	}
 	}
 	
-	bool some_fiber_finish(Fiber[] depositantes){
+	bool some_fiber_finish(Fiber[] depositantes) {
 		for (int i = 0; i < 20; i++) {
 			if (depositantes[i].state == Fiber.State.TERM){
 				return true;
@@ -181,13 +186,15 @@ void ejemplo6() {
 		auto depositante = new Fiber(&depositar);
 		depositantes[i] = depositante;
 	}
-	while (!some_fiber_finish(depositantes))
-    {
+
+	while (!some_fiber_finish(depositantes)) {
 		for (int i = 0; i < 20; i++) {
 			depositantes[i].call();
 		}
     }
+
 	auto after = MonoTime.currTime;
 	auto timeElapsed = after - before;
-	writefln("El tiempo que tardo es %s", timeElapsed);
+
+	writefln("Tiempo de ejecución: %s", timeElapsed);
 }
