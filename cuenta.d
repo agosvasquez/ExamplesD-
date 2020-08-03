@@ -3,56 +3,45 @@ import core.sync.mutex;
 import std;
 import moneda;
 
-class Cuenta {
+synchronized class Cuenta {
 protected:
-	shared Mutex mtx;
 	int numero;
 	moneda tipoMoneda;
 	float mActual;
 	float limiteExtraccion;
 
 public:
-	this(int nro_cuenta, float limite_extraccion) shared @safe nothrow {
-		mtx = new shared Mutex();
+	this(int nro_cuenta, float limite_extraccion)  @safe nothrow {
 		numero = nro_cuenta;
 		limiteExtraccion = limite_extraccion;
 		mActual = 0;
 	}
 
-	void agregarMonto(float monto) shared {
-		mtx.lock_nothrow();
+	void agregarMonto(float monto) {
 		cast()mActual += monto;
-		mtx.unlock_nothrow();
 	}
 
-	void retirarMonto(float monto) shared {
-		mtx.lock_nothrow();
+	void retirarMonto(float monto){
 		if (mActual < monto) {
-			mtx.unlock_nothrow();
 			throw new StringException( "No tienes suficiente dinero para extraer");
 		}
 	
 		if (monto > limiteExtraccion) {
-			mtx.unlock_nothrow();
 			throw new StringException( "El monto indicado supera el límite de extracción");
 		}
 
 		cast()mActual -= monto;
-		mtx.unlock_nothrow();
 	}
 
-	int obtenerNumeroCuenta() shared {
+	int obtenerNumeroCuenta(){
 		return numero;
 	}
 
-	float montoActual() shared {
-		mtx.lock_nothrow();
-		float monto = mActual;
-		mtx.unlock_nothrow();
-		return monto;
+	float montoActual(){
+		return mActual;
 	}
 
-	string obtenerSimboloMoneda() shared {
+	string obtenerSimboloMoneda() {
 		return tipoMoneda.simbolo;
 	}
 }
