@@ -14,6 +14,7 @@ void main() {
 	ejemplo3();
 	ejemplo4();
 	ejemplo5();
+	ejemplo6();
 }
 
 void ejemplo1() {
@@ -68,9 +69,10 @@ void ejemplo2() {
 
 void ejemplo3() {
 	writeln("\nEjemplo 3:\n");
-	shared Cuenta cuenta = new shared Cuenta(1, 500000);
+	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
 	Thread[20] depositantes;
 
+	auto before = MonoTime.currTime;
 	for (int i = 0; i < 20; i++) {
 		auto depositante = new Depositante(1, 10, &cuenta).start();
 		depositantes[i] = depositante;
@@ -83,6 +85,9 @@ void ejemplo3() {
 	// Tiene que devolver 45 * 20 = 900
 	writefln("El monto esperado despues que todos los depositantes agreguen su monto es de 900");
 	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
+	auto after = MonoTime.currTime;
+	auto timeElapsed = after - before;
+	writefln("El tiempo que tardo es %s", timeElapsed);
 }
 
 void ejemplo4() {
@@ -93,20 +98,20 @@ void ejemplo4() {
 	shared Cuenta[7] cuentas;
 
 	for (int i = 0; i < 7; i++) {
-		shared cuenta = new shared Cuenta(1, 500000);
+		shared cuenta = new shared Cuenta(1, 500_000);
 		cuenta.agregarMonto(100);
 		cuentas[i] = cuenta;
 	}
 
 	foreach (i; iota(6).parallel) {
-        // El cuerpo del foreach es ejecutado en paralelo para cada i 
+        // El cuerpo del foreach es ejecutado en paralelo para cada i
         writefln("El monto actual de la cuenta %s es de %s", i, cuentas[i].montoActual());
     }
 	
 	float[] suc1 = [cuentas[0].montoActual(),cuentas[1].montoActual(), cuentas[4].montoActual()],
 			suc2 = [cuentas[2].montoActual(), cuentas[3].montoActual(), cuentas[5].montoActual()],
 			suc3 = [cuentas[6].montoActual()];
-    
+
     // Tiene que ser inmutable para permitir el acceso desde dentro de una funcion pura
     immutable pivot = 0;
 
@@ -117,11 +122,11 @@ void ejemplo4() {
 
     // Closure
     auto r = suc1.chain(suc2).chain(suc3).reduce!mySum();
-    writeln("Resultado: ", r); 
+    writeln("Resultado: ", r);
 
     // Pasar un literal delegado
     r = reduce!((a, b) => (b > pivot) ? (a + b) : a)(chain(suc1, suc2, suc3));
-    writeln("Resultado: ", r); 
+    writeln("Resultado: ", r);
 }
 
 void ejemplo5() {
@@ -131,18 +136,58 @@ void ejemplo5() {
 	int nro_cuenta = 1;
 
 	SistemaBancario banco = new SistemaBancario();
-	
+
 	shared Cuenta cuenta_1 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
 	banco.agregarPersonaFisica("Persona 1", &cuenta_1);
 
 	shared Cuenta cuenta_2 = new shared CajaAhorroPesos(nro_cuenta++, limite_extraccion);
 	banco.agregarPersonaFisica("Persona 2", &cuenta_2);
-	
+
 	cuenta_1.agregarMonto(1000);
 	cuenta_2.agregarMonto(1000);
 
 	banco.transferir("Persona 1", "Persona 2", 200);
-	
+
 	writefln("El monto actual de la cuenta 1 es de %s", cuenta_1.montoActual());
 	writefln("El monto actual de la cuenta 2 es de %s", cuenta_2.montoActual());
+}
+
+
+void ejemplo6() {
+	import core.thread : Fiber;
+	writeln("\nEjemplo 6:\n");
+	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
+	Fiber[20] depositantes;
+
+	void depositar(){
+		for (int p = 1; p <10; p++) {
+        	cuenta.agregarMonto(p);
+			Fiber.yield();
+    	}
+	}
+	
+	bool some_fiber_finish(Fiber[] depositantes){
+		for (int i = 0; i < 20; i++) {
+			if (depositantes[i].state == Fiber.State.TERM){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	auto before = MonoTime.currTime;
+
+	for (int i = 0; i < 20; i++) {
+		auto depositante = new Fiber(&depositar);
+		depositantes[i] = depositante;
+	}
+	while (!some_fiber_finish(depositantes))
+    {
+		for (int i = 0; i < 20; i++) {
+			depositantes[i].call();
+		}
+    }
+	auto after = MonoTime.currTime;
+	auto timeElapsed = after - before;
+	writefln("El tiempo que tardo es %s", timeElapsed);
 }
