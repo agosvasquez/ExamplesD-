@@ -2,6 +2,7 @@ module cuenta;
 import core.sync.mutex;
 import std;
 import moneda;
+import core.atomic : atomicOp;
 
 synchronized class Cuenta {
 protected:
@@ -18,7 +19,7 @@ public:
 	}
 
 	void agregarMonto(float monto) {
-		cast()mActual += monto;
+		atomicOp!"+="(this.mActual, monto);
 	}
 
 	void retirarMonto(float monto){
@@ -30,7 +31,7 @@ public:
 			throw new StringException( "El monto indicado supera el límite de extracción");
 		}
 
-		cast()mActual -= monto;
+		atomicOp!"-="(this.mActual, monto);
 	}
 
 	int obtenerNumeroCuenta(){
