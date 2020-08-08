@@ -126,11 +126,11 @@ void ejemplo4() {
 			suc3 = [cuentas[6].montoActual()];
 
     // Tiene que ser inmutable para permitir el acceso desde dentro de una funcion pura
-    immutable pivot = 0;
+    immutable pivote = 0;
 
     // Funcion pura
     float mySum(float a, float b) pure nothrow {
-    	return (b > pivot) ? (a + b) : a;
+    	return (b > pivote) ? (a + b) : a;
     }
 
     // Closure
@@ -138,7 +138,7 @@ void ejemplo4() {
     writeln("Resultado: ", r);
 
     // Pasar un literal delegado
-    r = reduce!((a, b) => (b > pivot) ? (a + b) : a)(chain(suc1, suc2, suc3));
+    r = reduce!((a, b) => (b > pivote) ? (a + b) : a)(chain(suc1, suc2, suc3));
     writeln("Resultado: ", r);
 }
 
@@ -146,7 +146,7 @@ void ejemplo5() {
 	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
 	Thread[20] depositantes;
 
-	auto before = MonoTime.currTime;
+	auto t_inicial = MonoTime.currTime;
 
 	for (int i = 0; i < 20; i++) {
 		auto depositante = new Depositante(1, 10, &cuenta).start();
@@ -160,10 +160,10 @@ void ejemplo5() {
 	// Tiene que devolver 45 * 20 = 900
 	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
 
-	auto after = MonoTime.currTime;
-	auto timeElapsed = after - before;
+	auto t_final = MonoTime.currTime;
+	auto t_total = t_final - t_inicial;
 
-	writefln("Tiempo de ejecución: %s", timeElapsed);
+	writefln("Tiempo de ejecución: %s", t_total);
 }
 
 void ejemplo6() {
@@ -179,7 +179,7 @@ void ejemplo6() {
     	}
 	}
 	
-	bool some_fiber_finish(Fiber[] depositantes) {
+	bool finalizo_algun_fiber(Fiber[] depositantes) {
 		for (int i = 0; i < 20; i++) {
 			if (depositantes[i].state == Fiber.State.TERM){
 				return true;
@@ -188,23 +188,23 @@ void ejemplo6() {
 		return false;
 	}
 	
-	auto before = MonoTime.currTime;
+	auto t_inicial = MonoTime.currTime;
 
 	for (int i = 0; i < 20; i++) {
 		auto depositante = new Fiber(&depositar);
 		depositantes[i] = depositante;
 	}
 
-	while (!some_fiber_finish(depositantes)) {
+	while (! finalizo_algun_fiber(depositantes)) {
 		for (int i = 0; i < 20; i++) {
 			depositantes[i].call();
 		}
     }
 
-	auto after = MonoTime.currTime;
-	auto timeElapsed = after - before;
+	auto t_final = MonoTime.currTime;
+	auto t_total = t_final - t_inicial;
 
-	writefln("Tiempo de ejecución: %s", timeElapsed);
+	writefln("Tiempo de ejecución: %s", t_total);
 }
 
 void ejemplo7() {
@@ -217,14 +217,17 @@ void ejemplo7() {
 	// Char a buscar
 	char c = 'a';
 
-	// Cantidad de procesadores
-	int num_processors = 1_000;
-
-	// Creo el archivo
+	// Archivo
 	int num_lineas = 10_000_000;
 	string linea_str = "Hola mundo! Esto es una prueba de procesamiento en paralelo.";
 	int largo_linea = cast(int) linea_str.length;
 
+	// Procesadores
+	int num_processors = 1_000;
+	int linea_inicio = 0;
+	int lineas_por_procesador = cast(int) num_lineas/num_processors;
+
+	// Creo el archivo
 	writefln("Creando archivo de %s lineas...\n", num_lineas);
 	auto f = File("test_file.txt", "w");
 	for (int i = 0; i < num_lineas; i ++)
@@ -236,6 +239,8 @@ void ejemplo7() {
 	// PROCESAMIENTO CON PARALLEL //
 	// -------------------------- //
 	
+	writeln("Procesamiento con Parallel:");
+
 	// Creo la clase contadora de chars
 	class CharCounter {
 		int id;
@@ -265,31 +270,44 @@ void ejemplo7() {
 
 	// Abro el archivo y paralelizo el contador de chars
 	f = File("test_file.txt", "r");
-	int linea_inicio = 0;
-	int lineas_a_procesar = cast(int) num_lineas/num_processors;
 
 	auto t_inicial = MonoTime.currTime;
-	writefln("Procesando archivo con %s procesadores...\n", num_processors);
+	writefln("- Procesando archivo con %s procesadores...", num_processors);
 
 	foreach(counter; parallel(counters)) {
-		total_char += counter.countChar(c, f, linea_inicio, lineas_a_procesar);
-		linea_inicio += lineas_a_procesar;
+		total_char += counter.countChar(c, f, linea_inicio, lineas_por_procesador);
+		linea_inicio += lineas_por_procesador;
     }	
 	f.close();
 
 	auto t_final = MonoTime.currTime;
-	auto t_total = t_final - t_inicial;	
+	auto t_total = t_final - t_inicial;
 
-	writefln("Cantidad de '%s' encontradas en el archivo: %s\n", c, total_char);
-	writefln("Tiempo de ejecución: %s", t_total);	
+	writefln("- Cantidad de '%s' encontradas en el archivo: %s", c, total_char);
+	writefln("- Tiempo de ejecución: %s", t_total);	
 
 	total_char = 0;
+	linea_inicio = 0;
 
 	// ------------------------ //
 	// PROCESAMIENTO CON FIBERS //
 	// ------------------------ //
 
+	writeln("\nProcesamiento con Fibers:");
+
+	// Abro el archivo y paralelizo el contador de chars
 	f = File("test_file.txt", "r");
 
+	t_inicial = MonoTime.currTime;
+	writefln("- Procesando archivo con %s procesadores...", num_processors);
+
+	// TODO: ...
+
 	f.close();
+
+	t_final = MonoTime.currTime;
+	t_total = t_final - t_inicial;
+
+	writefln("- Cantidad de '%s' encontradas en el archivo: %s", c, total_char);
+	writefln("- Tiempo de ejecución: %s", t_total);
 }
