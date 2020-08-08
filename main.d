@@ -9,17 +9,36 @@ import depositante;
 import core.thread : Thread;
 
 void main() {
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 1:\n");
 	ejemplo1();
+
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 2:\n");
 	ejemplo2();
+	
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 3:\n");	
 	ejemplo3();
+	
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 4:\n");	
 	ejemplo4();
+	
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 5:\n");	
 	ejemplo5();
+	
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 6:\n");	
 	ejemplo6();
+	
+	writeln("\n--------------------------------------------------------\n");
+	writeln("EJEMPLO 7:\n");
+	ejemplo7();
 }
 
 void ejemplo1() {
-	writeln("\nEjemplo 1:\n");
-
 	int nro_cuenta = 1;
 	float limite_extraccion = 10_000;
 
@@ -56,8 +75,6 @@ void ejemplo1() {
 }
 
 void ejemplo2() {
-	writeln("\nEjemplo 2:\n");
-
 	int nro_cuenta = 1;
 	float limite_extraccion = 15_000;
 
@@ -68,8 +85,6 @@ void ejemplo2() {
 }
 
 void ejemplo3() {
-	writeln( "\nEjemplo 3:\n");
-
 	float limite_extraccion = 10_000;
 	int nro_cuenta = 1;
 
@@ -91,9 +106,7 @@ void ejemplo3() {
 }
 
 void ejemplo4() {
-	import std.stdio, std.algorithm, std.range;
-
-	writeln("\nEjemplo 4:\n");
+	import std.algorithm;
 
 	shared Cuenta[7] cuentas;
 
@@ -130,8 +143,6 @@ void ejemplo4() {
 }
 
 void ejemplo5() {
-	writeln("\nEjemplo 5:\n");
-
 	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
 	Thread[20] depositantes;
 
@@ -147,7 +158,6 @@ void ejemplo5() {
 	}
 
 	// Tiene que devolver 45 * 20 = 900
-	writefln("El monto esperado despues que todos los depositantes agreguen su monto es de 900");
 	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
 
 	auto after = MonoTime.currTime;
@@ -158,8 +168,6 @@ void ejemplo5() {
 
 void ejemplo6() {
 	import core.thread : Fiber;
-
-	writeln("\nEjemplo 6:\n");
 
 	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
 	Fiber[20] depositantes;
@@ -197,4 +205,91 @@ void ejemplo6() {
 	auto timeElapsed = after - before;
 
 	writefln("Tiempo de ejecución: %s", timeElapsed);
+}
+
+void ejemplo7() {
+	import std.algorithm;
+	import core.thread : Fiber;
+
+	// Cantidad de chars totales
+	int total_char = 0;
+
+	// Char a buscar
+	char c = 'a';
+
+	// Cantidad de procesadores
+	int num_processors = 1_000;
+
+	// Creo el archivo
+	int num_lineas = 10_000_000;
+	string linea_str = "Hola mundo! Esto es una prueba de procesamiento en paralelo.";
+	int largo_linea = cast(int) linea_str.length;
+
+	writefln("Creando archivo de %s lineas...\n", num_lineas);
+	auto f = File("test_file.txt", "w");
+	for (int i = 0; i < num_lineas; i ++)
+		f.writeln(linea_str);
+	f.close();
+	writeln("OK!\n");	
+
+	// -------------------------- //
+	// PROCESAMIENTO CON PARALLEL //
+	// -------------------------- //
+	
+	// Creo la clase contadora de chars
+	class CharCounter {
+		int id;
+
+		this(int id) {
+			this.id = id;
+		}
+
+		int countChar(char c, ref File f, int linea_inicio, int n) {
+			f.seek(linea_inicio * largo_linea);
+			string linea;
+			int cant_char;
+
+			for(int i = 0; i < n; i ++) {
+				linea = f.readln();
+				foreach(actual_char; linea_str)
+					if (actual_char == c) cant_char ++;
+			}
+			return cant_char;
+		}
+	}
+
+	// Creo los contadores
+	CharCounter[] counters;
+	for(int i = 0; i < num_processors; i ++)
+		counters ~= new CharCounter(i + 1);
+
+	// Abro el archivo y paralelizo el contador de chars
+	f = File("test_file.txt", "r");
+	int linea_inicio = 0;
+	int lineas_a_procesar = cast(int) num_lineas/num_processors;
+
+	auto t_inicial = MonoTime.currTime;
+	writefln("Procesando archivo con %s procesadores...\n", num_processors);
+
+	foreach(counter; parallel(counters)) {
+		total_char += counter.countChar(c, f, linea_inicio, lineas_a_procesar);
+		linea_inicio += lineas_a_procesar;
+    }	
+	f.close();
+
+	auto t_final = MonoTime.currTime;
+	auto t_total = t_final - t_inicial;	
+
+	writefln("Cantidad de '%s' encontradas en el archivo: %s\n", c, total_char);
+	writefln("Tiempo de ejecución: %s", t_total);	
+
+	total_char = 0;
+
+	// ------------------------ //
+	// PROCESAMIENTO CON FIBERS //
+	// ------------------------ //
+
+	f = File("test_file.txt", "r");
+
+	f.close();
 }
