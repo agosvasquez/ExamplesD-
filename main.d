@@ -223,9 +223,9 @@ void ejemplo7() {
 	int largo_linea = cast(int) linea_str.length;
 
 	// Procesadores
-	int num_processors = 1_000;
+	int num_procesadores = 1_000;
 	int linea_inicio = 0;
-	int lineas_por_procesador = cast(int) num_lineas/num_processors;
+	int lineas_por_procesador = cast(int) num_lineas/num_procesadores;
 
 	// Creo el archivo
 	writefln("Creando archivo de %s lineas...\n", num_lineas);
@@ -242,14 +242,14 @@ void ejemplo7() {
 	writeln("Procesamiento con Parallel:");
 
 	// Creo la clase contadora de chars
-	class CharCounter {
+	class ContadorChar {
 		int id;
 
 		this(int id) {
 			this.id = id;
 		}
 
-		int countChar(char c, ref File f, int linea_inicio, int n) {
+		int contarChar(char c, ref File f, int linea_inicio, int n) {
 			f.seek(linea_inicio * largo_linea);
 			string linea;
 			int cant_char;
@@ -264,20 +264,20 @@ void ejemplo7() {
 	}
 
 	// Creo los contadores
-	CharCounter[] counters;
-	for(int i = 0; i < num_processors; i ++)
-		counters ~= new CharCounter(i + 1);
+	ContadorChar[] contadores;
+	for(int i = 0; i < num_procesadores; i ++)
+		contadores ~= new ContadorChar(i + 1);
 
 	// Abro el archivo y paralelizo el contador de chars
 	f = File("test_file.txt", "r");
 
 	auto t_inicial = MonoTime.currTime;
-	writefln("- Procesando archivo con %s procesadores...", num_processors);
+	writefln("- Procesando archivo con %s procesadores...", num_procesadores);
 
-	foreach(counter; parallel(counters)) {
-		total_char += counter.countChar(c, f, linea_inicio, lineas_por_procesador);
+	foreach(contador; parallel(contadores)) {
+		total_char += contador.contarChar(c, f, linea_inicio, lineas_por_procesador);
 		linea_inicio += lineas_por_procesador;
-    }	
+    }
 	f.close();
 
 	auto t_final = MonoTime.currTime;
@@ -286,23 +286,56 @@ void ejemplo7() {
 	writefln("- Cantidad de '%s' encontradas en el archivo: %s", c, total_char);
 	writefln("- Tiempo de ejecución: %s", t_total);	
 
-	total_char = 0;
-	linea_inicio = 0;
-
 	// ------------------------ //
 	// PROCESAMIENTO CON FIBERS //
 	// ------------------------ //
 
+	total_char = 0;
+	linea_inicio = 0;	
+
 	writeln("\nProcesamiento con Fibers:");
 
+	// Funciones de Fibers
+	void contar_char() {
+		f.seek(linea_inicio * largo_linea);
+		string linea;
+		int cant_char;
+
+		for(int i = 0; i < lineas_por_procesador; i ++) {
+			linea = f.readln();
+			foreach(actual_char; linea_str)
+				if (actual_char == c) cant_char ++;
+		}
+		total_char += cant_char;
+		Fiber.yield();		
+	}
+	
+	bool finalizo_algun_fiber(Fiber[] fibers) {
+		for (int i = 0; i < num_procesadores; i++) {
+			if (fibers[i].state == Fiber.State.TERM)
+				return true;
+		}
+		return false;
+	}
+	
 	// Abro el archivo y paralelizo el contador de chars
 	f = File("test_file.txt", "r");
 
 	t_inicial = MonoTime.currTime;
-	writefln("- Procesando archivo con %s procesadores...", num_processors);
+	writefln("- Procesando archivo con %s procesadores...", num_procesadores);
 
-	// TODO: ...
+	Fiber[] fibers;
 
+	for (int i = 0; i < num_procesadores; i++) {
+		fibers ~= new Fiber(&contar_char);
+		linea_inicio += lineas_por_procesador;
+	}
+
+	while (! finalizo_algun_fiber(fibers)) {
+		for (int i = 0; i < num_procesadores; i++) {
+			fibers[i].call();
+		}
+    }
 	f.close();
 
 	t_final = MonoTime.currTime;
