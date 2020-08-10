@@ -7,6 +7,8 @@ import persona_juridica;
 import sistema_bancario;
 import depositante;
 import core.thread : Thread;
+import std.conv;
+import derived_fiber;
 
 void main() {
 	writeln("\n--------------------------------------------------------\n");
@@ -16,29 +18,31 @@ void main() {
 	writeln("\n--------------------------------------------------------\n");
 	writeln("EJEMPLO 2:\n");
 	ejemplo2();
-	
+
 	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 3:\n");	
+	writeln("EJEMPLO 3:\n");
 	ejemplo3();
-	
+
 	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 4:\n");	
+	writeln("EJEMPLO 4:\n");
 	ejemplo4();
-	
+
 	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 5:\n");	
+	writeln("EJEMPLO 5:\n");
 	ejemplo5();
-	
+
 	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 6:\n");	
+	writeln("EJEMPLO 6:\n");
 	ejemplo6();
-	
+
 	writeln("\n--------------------------------------------------------\n");
 	writeln("EJEMPLO 7:\n");
 	ejemplo7();
 }
 
 void ejemplo1() {
+	writeln("\nEjemplo 1:\n");
+
 	int nro_cuenta = 1;
 	float limite_extraccion = 10_000;
 
@@ -75,6 +79,8 @@ void ejemplo1() {
 }
 
 void ejemplo2() {
+	writeln("\nEjemplo 2:\n");
+
 	int nro_cuenta = 1;
 	float limite_extraccion = 15_000;
 
@@ -85,6 +91,8 @@ void ejemplo2() {
 }
 
 void ejemplo3() {
+	writeln( "\nEjemplo 3:\n");
+
 	float limite_extraccion = 10_000;
 	int nro_cuenta = 1;
 
@@ -142,45 +150,58 @@ void ejemplo4() {
     writeln("Resultado: ", r);
 }
 
+
+int read_line(){
+	writef("Enter a number: ");
+    auto text = readln;
+    int number = to!int(text[0..1]);
+	return number;
+}
+
+
 void ejemplo5() {
-	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
-	Thread[20] depositantes;
+	writeln("\nEjemplo 5:\n");
 
-	auto t_inicial = MonoTime.currTime;
+	shared Cuenta[3] cuentas;
+	Thread[3] depositantes;
 
-	for (int i = 0; i < 20; i++) {
-		auto depositante = new Depositante(1, 10, &cuenta).start();
-		depositantes[i] = depositante;
+
+	for (int i = 0; i < 3; i++) {
+		cuentas[i] = new shared Cuenta(1, 500_000);
 	}
 
-	for (int i = 0; i < 20; i++) {
+	depositantes[0] = new Depositante(1, 10, &cuentas[0]).start();
+	depositantes[1] = new Depositante(1, 10, &cuentas[1]).start();
+	depositantes[2] = new Depositante(1, 10, &cuentas[2]).start();
+
+
+	for (int i = 0; i < 3; i++) {
 		depositantes[i].join();
 	}
 
-	// Tiene que devolver 45 * 20 = 900
-	writefln("El monto actual de la cuenta es de %s",cuenta.montoActual());
+	for (int i = 0; i < 3; i++) {
+		writefln("El monto actual de la cuenta es de %s",cuentas[i].montoActual());
+	}
 
-	auto t_final = MonoTime.currTime;
-	auto t_total = t_final - t_inicial;
 
-	writefln("Tiempo de ejecución: %s", t_total);
 }
 
 void ejemplo6() {
 	import core.thread : Fiber;
 
-	shared Cuenta cuenta = new shared Cuenta(1, 500_000);
-	Fiber[20] depositantes;
+	writeln("\nEjemplo 6:\n");
+	shared Cuenta[3] cuentas;
+	Fiber[3] depositantes;
 
-	void depositar() {
-		for (int p = 1; p <10; p++) {
-        	cuenta.agregarMonto(p);
-			Fiber.yield();
-    	}
+	void say_hello() {
+		writef("Enter your name: \n");
+		Fiber.yield();
+   		auto name = readln();
+    	writef("Hello %s", name);
 	}
-	
-	bool finalizo_algun_fiber(Fiber[] depositantes) {
-		for (int i = 0; i < 20; i++) {
+
+	bool some_fiber_finish(Fiber[] depositantes) {
+		for (int i = 0; i < 3; i++) {
 			if (depositantes[i].state == Fiber.State.TERM){
 				return true;
 			}
@@ -188,23 +209,28 @@ void ejemplo6() {
 		return false;
 	}
 	
-	auto t_inicial = MonoTime.currTime;
+	auto hello = new Fiber(&say_hello);
+	hello.call();
 
-	for (int i = 0; i < 20; i++) {
-		auto depositante = new Fiber(&depositar);
-		depositantes[i] = depositante;
+	for (int i = 0; i < 3; i++) {
+		cuentas[i] = new shared Cuenta(1, 500_000);
 	}
 
-	while (! finalizo_algun_fiber(depositantes)) {
-		for (int i = 0; i < 20; i++) {
+	depositantes[0] = new DerivedFiber(cuentas[0], 10);
+	depositantes[1] = new DerivedFiber(cuentas[1], 10);
+	depositantes[2] = new DerivedFiber(cuentas[2], 10);
+
+
+	while (!some_fiber_finish(depositantes)) {
+		for (int i = 0; i < 3; i++) {
 			depositantes[i].call();
 		}
     }
 
-	auto t_final = MonoTime.currTime;
-	auto t_total = t_final - t_inicial;
-
-	writefln("Tiempo de ejecución: %s", t_total);
+	for (int i = 0; i < 3; i++) {
+		writefln("El monto actual de la cuenta es de %s",cuentas[i].montoActual());
+	}
+	hello.call();
 }
 
 void ejemplo7() {
@@ -233,12 +259,12 @@ void ejemplo7() {
 	for (int i = 0; i < num_lineas; i ++)
 		f.writeln(linea_str);
 	f.close();
-	writeln("OK!\n");	
+	writeln("OK!\n");
 
 	// -------------------------- //
 	// PROCESAMIENTO CON PARALLEL //
 	// -------------------------- //
-	
+
 	writeln("Procesamiento con Parallel:");
 
 	// Creo la clase contadora de chars
@@ -284,14 +310,14 @@ void ejemplo7() {
 	auto t_total = t_final - t_inicial;
 
 	writefln("- Cantidad de '%s' encontradas en el archivo: %s", c, total_char);
-	writefln("- Tiempo de ejecución: %s", t_total);	
+	writefln("- Tiempo de ejecución: %s", t_total);
 
 	// ------------------------ //
 	// PROCESAMIENTO CON FIBERS //
 	// ------------------------ //
 
 	total_char = 0;
-	linea_inicio = 0;	
+	linea_inicio = 0;
 
 	writeln("\nProcesamiento con Fibers:");
 
@@ -307,9 +333,9 @@ void ejemplo7() {
 				if (actual_char == c) cant_char ++;
 		}
 		total_char += cant_char;
-		Fiber.yield();		
+		Fiber.yield();
 	}
-	
+
 	bool finalizo_algun_fiber(Fiber[] fibers) {
 		for (int i = 0; i < num_procesadores; i++) {
 			if (fibers[i].state == Fiber.State.TERM)
@@ -317,7 +343,7 @@ void ejemplo7() {
 		}
 		return false;
 	}
-	
+
 	// Abro el archivo y paralelizo el contador de chars
 	f = File("test_file.txt", "r");
 
