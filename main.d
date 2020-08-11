@@ -8,24 +8,24 @@ import sistema_bancario;
 import depositante;
 import core.thread : Thread;
 import std.conv;
-import derived_fiber;
+import fibra_derivada;
 
 void main() {
-	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 1:\n");
-	ejemplo1();
+	//writeln("\n--------------------------------------------------------\n");
+	//writeln("EJEMPLO 1:\n");
+	//ejemplo1();
 
-	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 2:\n");
-	ejemplo2();
+	//writeln("\n--------------------------------------------------------\n");
+	//writeln("EJEMPLO 2:\n");
+	//ejemplo2();
 
-	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 3:\n");
-	ejemplo3();
+	//writeln("\n--------------------------------------------------------\n");
+	//writeln("EJEMPLO 3:\n");
+	//ejemplo3();
 
-	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 4:\n");
-	ejemplo4();
+	//writeln("\n--------------------------------------------------------\n");
+	//writeln("EJEMPLO 4:\n");
+	//ejemplo4();
 
 	writeln("\n--------------------------------------------------------\n");
 	writeln("EJEMPLO 5:\n");
@@ -35,9 +35,9 @@ void main() {
 	writeln("EJEMPLO 6:\n");
 	ejemplo6();
 
-	writeln("\n--------------------------------------------------------\n");
-	writeln("EJEMPLO 7:\n");
-	ejemplo7();
+	//writeln("\n--------------------------------------------------------\n");
+	//writeln("EJEMPLO 7:\n");
+	//ejemplo7();
 }
 
 void ejemplo1() {
@@ -151,17 +151,7 @@ void ejemplo4() {
 }
 
 
-int read_line(){
-	writef("Enter a number: ");
-    auto text = readln;
-    int number = to!int(text[0..1]);
-	return number;
-}
-
-
 void ejemplo5() {
-	writeln("\nEjemplo 5:\n");
-
 	shared Cuenta[3] cuentas;
 	Thread[3] depositantes;
 
@@ -186,42 +176,27 @@ void ejemplo5() {
 
 }
 
+
 void ejemplo6() {
 	import core.thread : Fiber;
+	import utiles;
 
-	writeln("\nEjemplo 6:\n");
 	shared Cuenta[3] cuentas;
 	Fiber[3] depositantes;
-
-	void say_hello() {
-		writef("Enter your name: \n");
-		Fiber.yield();
-   		auto name = readln();
-    	writef("Hello %s", name);
-	}
-
-	bool some_fiber_finish(Fiber[] depositantes) {
-		for (int i = 0; i < 3; i++) {
-			if (depositantes[i].state == Fiber.State.TERM){
-				return true;
-			}
-		}
-		return false;
-	}
 	
-	auto hello = new Fiber(&say_hello);
-	hello.call();
+	auto hola = new Fiber(&saludar);
+	hola.call();
 
 	for (int i = 0; i < 3; i++) {
 		cuentas[i] = new shared Cuenta(1, 500_000);
 	}
 
-	depositantes[0] = new DerivedFiber(cuentas[0], 10);
-	depositantes[1] = new DerivedFiber(cuentas[1], 10);
-	depositantes[2] = new DerivedFiber(cuentas[2], 10);
+	depositantes[0] = new FibraDerivada(cuentas[0], 10);
+	depositantes[1] = new FibraDerivada(cuentas[1], 10);
+	depositantes[2] = new FibraDerivada(cuentas[2], 10);
 
 
-	while (!some_fiber_finish(depositantes)) {
+	while (!alguna_fibra_finalizo(depositantes)) {
 		for (int i = 0; i < 3; i++) {
 			depositantes[i].call();
 		}
@@ -230,8 +205,11 @@ void ejemplo6() {
 	for (int i = 0; i < 3; i++) {
 		writefln("El monto actual de la cuenta es de %s",cuentas[i].montoActual());
 	}
-	hello.call();
+
+	hola.call();
+
 }
+
 
 void ejemplo7() {
 	import std.algorithm;
